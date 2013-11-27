@@ -239,10 +239,14 @@ void Parser::scenePostProcess(Scene *scene) {
     
     
     for (Object* obj : scene->getObjects()) {
-        double unit = 0.02;
+        double unit = 0.6;
 
-        for (double x = smallestUnitPosAbove(obj->minPos.x, unit); x < obj->maxPos.x; x += unit) {
-            for (double y = smallestUnitPosAbove(obj->minPos.y, unit); y < obj->maxPos.y; y += unit) {
+        double xs = smallestUnitPosAbove(obj->minPos.x, unit);
+        double ys = smallestUnitPosAbove(obj->minPos.y, unit);
+        double zs = smallestUnitPosAbove(obj->minPos.z, unit);
+        
+        for (double x = xs; x < obj->maxPos.x; x += unit) {
+            for (double y = ys; y < obj->maxPos.y; y += unit) {
                 vector<double> intersectionDepths;
                 
                 for (Face* f : obj->getFaces()) {
@@ -267,32 +271,55 @@ void Parser::scenePostProcess(Scene *scene) {
                     }
                     
                     // check if u, v and u + v are between 0 and 1
-                    if (u > 0 && v > 0 && u + v < 1) {
+                    if (u >= -0.001 && v >= -0.001 && u + v <= 1.001) {
                         double z = f->vertices[0]->pos.z + u * z1 + v * z2;
                         intersectionDepths.push_back(z);
                     }
                 }
-        
-                // cout << intersectionDepths.size() << endl;
+
                 // sort intersectionDepths
                 if (intersectionDepths.size() >= 2) {
-                sort(intersectionDepths.begin(), intersectionDepths.end());
-                cout << intersectionDepths[0] << '\t' << intersectionDepths[1] << endl;
+                    sort(intersectionDepths.begin(), intersectionDepths.end());
                 }
 
                 // check for each z-coord: is it in the model?
-                for (double z = smallestUnitPosAbove(obj->minPos.z, unit); z < obj->maxPos.z; z += unit) {
+                for (double z = zs; z < obj->maxPos.z; z += unit) {
                     // if z is after an odd depth and before an even depth, it's in the model
                     // if so, create a particle at (x, y, z) and add it to the model
                     for (int i = 0; i * 2 < intersectionDepths.size(); i += 2) {
                         if (z > intersectionDepths[i] && z < intersectionDepths[i + 1]) {
-                            obj->particles.push_back(new Particle(Vec3(x, y, z), unit));
+                            Particle* p = new Particle(Vec3(x, y, z), unit, NULL);
+                            int i = round((x - xs) / unit);
+                            int j = round((y - ys) / unit);
+                            int k = round((z - zs) / unit);
+                            // cout << i << endl;
+                            
+                            p->setIndex(i, j, k);
+                            obj->particles.push_back(p);
                         }
                     }
                 }
             }
         }
 
+        for (Particle* p : obj->particles) {
+            int count = 0;
+            for (Particle* q : obj->particles) {
+                if (p != q) {
+                    /*
+                    double distance = (p->pos - q->pos).length();
+                    
+                    if (distance - unit < 0.01) {
+                        count++;
+                    }
+                    */
+                    if (abs(q->i - p->i) + abs(q->j - p->j) + abs(q->k - p->k) == 1) {
+                        count++;
+                    }
+                }
+            }
+            // cout << count << endl;
+        }
     }
 
 }

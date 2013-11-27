@@ -2,15 +2,20 @@
 #include <GLUT/GLUT.h>
 
 #include "parser.h"
+#include "particle.h"
+#include "spring.h"
 #include "cloth.h"
 
 Scene* scene;
 
-Cloth* cloth;
 Gel* gel;
+Gel* fallGel;
+Gel* fallGel2;
+
+vector<Particle*> particles;
 
 double xPos = 1;
-double zPos = 5;
+double zPos = 2;
 
 void keypressed(unsigned char key, int x, int y) {
     switch (key) {
@@ -35,14 +40,37 @@ void keypressed(unsigned char key, int x, int y) {
 }
 
 void simulate() {
-    for (Object* obj : scene->getObjects()) {
-        
+    fallGel->clearState();
+    fallGel2->clearState();
+    gel->clearState();
+    
+    for (Particle* p : gel->particles) {
+        for (Particle* q : fallGel->particles) {
+            Vec3 dis = p->pos - q->pos;
+            if (dis.length() < 0.1) { // two particles close enough
+                p->addForce(dis * dis.length() * 20);
+                q->addForce(dis * dis.length() * -20);
+            }
+        }
     }
+    
+    for (Particle* p : gel->particles) {
+        for (Particle* q : fallGel2->particles) {
+            Vec3 dis = p->pos - q->pos;
+            if (dis.length() < 0.1) { // two particles close enough
+                p->addForce(dis * dis.length() * 20);
+                q->addForce(dis * dis.length() * -20);
+            }
+        }
+    }
+    
+    gel->simulate();
+    fallGel->simulate();
+    fallGel2->simulate();
 }
 
 void display() {
-    // cloth->simulate();
-    // gel->simulate();
+    simulate();
     
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -51,106 +79,32 @@ void display() {
     gluPerspective(50.0, 1.33, 0.1, 300);
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
-    gluLookAt(xPos, 1.0, zPos,
+    gluLookAt(xPos, 3.0, zPos,
               0.0, 0.0, 0.0,
               0.0, 1.0, 0.0);
     
-    glColor3d(1, 0.3, 0.7);
     glLineWidth(1);
+    glPointSize(3);
     
-    Object* obj = scene->getObjects()[0];
-    
+    glColor3d(1, 1, 0);
     glBegin(GL_POINTS);
-    for (Particle* p : obj->particles) {
-        // glColor3d(p->pos.x, p->pos.y, p->pos.z);
-        glVertex3d(p->pos.x, p->pos.y, p->pos.z);
-    }
+    glVertex3d(0, 2, 1);
     glEnd();
     
-    /*
-    for (int i = 0; i < gel->size - 1; i++) {
-        for (int j = 0; j < gel->size - 1; j++) {
-            for (int k = 0; k < gel->size - 1; k++) {
-                Vec3 v1 = gel->vertices[i][j][k];
-                Vec3 v2 = gel->vertices[i][j + 1][k];
-                Vec3 v3 = gel->vertices[i + 1][j + 1][k];
-                Vec3 v4 = gel->vertices[i + 1][j][k];
-                Vec3 v5 = gel->vertices[i][j][k + 1];
-                Vec3 v6 = gel->vertices[i][j + 1][k + 1];
-                Vec3 v7 = gel->vertices[i + 1][j + 1][k + 1];
-                Vec3 v8 = gel->vertices[i + 1][j][k + 1];
-                glBegin(GL_LINES);
-                glVertex3d(v1.x, v1.y, v1.z);
-                glVertex3d(v2.x, v2.y, v2.z);
-                
-                glVertex3d(v1.x, v1.y, v1.z);
-                glVertex3d(v4.x, v4.y, v4.z);
-                
-                glVertex3d(v3.x, v3.y, v3.z);
-                glVertex3d(v2.x, v2.y, v2.z);
-                
-                glVertex3d(v3.x, v3.y, v3.z);
-                glVertex3d(v4.x, v4.y, v4.z);
-                
-                glVertex3d(v1.x, v1.y, v1.z);
-                glVertex3d(v5.x, v5.y, v5.z);
-                
-                glVertex3d(v2.x, v2.y, v2.z);
-                glVertex3d(v6.x, v6.y, v6.z);
-                
-                glVertex3d(v3.x, v3.y, v3.z);
-                glVertex3d(v7.x, v7.y, v7.z);
-                
-                glVertex3d(v4.x, v4.y, v4.z);
-                glVertex3d(v8.x, v8.y, v8.z);
-                
-                glVertex3d(v6.x, v6.y, v6.z);
-                glVertex3d(v5.x, v5.y, v5.z);
-                
-                glVertex3d(v7.x, v7.y, v7.z);
-                glVertex3d(v6.x, v6.y, v6.z);
-                
-                glVertex3d(v8.x, v8.y, v8.z);
-                glVertex3d(v7.x, v7.y, v7.z);
-                
-                glVertex3d(v5.x, v5.y, v5.z);
-                glVertex3d(v8.x, v8.y, v8.z);
-                
-                glEnd();
-            }
-        }
-    }
-    */
     
-    /*
-    for (int i = 0; i < cloth->size - 1; i++) {
-        for (int j = 0; j < cloth->size - 1; j++) {
-            Vec3 v1 = cloth->vertices[i][j];
-            Vec3 v2 = cloth->vertices[i][j + 1];
-            Vec3 v3 = cloth->vertices[i + 1][j + 1];
-            Vec3 v4 = cloth->vertices[i + 1][j];
-            glBegin(GL_LINE_LOOP);
-            glVertex3d(v1.x, v1.y, v1.z);
-            glVertex3d(v2.x, v2.y, v2.z);
-            glVertex3d(v3.x, v3.y, v3.z);
-            glVertex3d(v4.x, v4.y, v4.z);
-            glEnd();
-        }
-    }
-     */
+    GLfloat diffuseMat3[] = { 0.8f, 0.3f, 0.6f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat3);
+    gel->draw();
     
-    /*
-    for (Object* obj : scene->getObjects()) {
-        glColor3d(obj->mat->kd[0], obj->mat->kd[1], obj->mat->kd[2]);
-        for (Face* f : obj->getFaces()) {
-            glBegin(GL_TRIANGLES);
-            glVertex3d(f->vertices[0]->pos.x, f->vertices[0]->pos.y, f->vertices[0]->pos.z);
-            glVertex3d(f->vertices[1]->pos.x, f->vertices[1]->pos.y, f->vertices[1]->pos.z);
-            glVertex3d(f->vertices[2]->pos.x, f->vertices[2]->pos.y, f->vertices[2]->pos.z);
-            glEnd();
-        }
-    }
-    */
+    // glColor3d(0, 1, 1);
+    GLfloat diffuseMat1[] = { 0.0f, 0.8f, 0.8f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat1);
+    fallGel->draw();
+    
+    GLfloat diffuseMat2[] = { 0.5f, 0.8f, 0.5f, 1.0f };
+    glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat2);
+    fallGel2->draw();
+
     
     glutSwapBuffers();
     glutPostRedisplay();
@@ -158,16 +112,34 @@ void display() {
 }
 
 int main(int argc, char * argv[]) {
-    Parser* parser = new Parser;
-    scene = parser->parseFile("/Users/guanlunzhao/Workspace/Models/cube.obj");
+    // Parser* parser = new Parser;
+    // scene = parser->parseFile("/Users/guanlunzhao/Workspace/Models/cube.obj");
     
-    // cloth = new Cloth(30);
-    gel = new Gel(10);
-    
+    gel = new Gel(10, 1, Vec3(0, 0, 0));
+    gel->still = true;
+    fallGel = new Gel(5, 0.5, Vec3(0.5, 2, 0.5));
+    fallGel2 = new Gel(5, 0.5, Vec3(-0.5, 1, 0));
+
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(800, 600);
     glutCreateWindow("Hello World");
+    
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    
+    glEnable(GL_LIGHTING);
+    glEnable(GL_LIGHT0);
+    glEnable(GL_DEPTH_TEST);
+    
+    glShadeModel(GL_FLAT);
+    
+    GLfloat lightPos[] = { 0.0f, 2.0f, 1.0f, 10.0f };
+    GLfloat ambientColor[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+    GLfloat diffuseColor[] = { 0.8f, 0.8f, 0.8f, 1.0f };
+    glLightfv(GL_LIGHT0, GL_POSITION, lightPos);
+    // glLightfv(GL_LIGHT0, GL_AMBIENT, ambientColor);
+    glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseColor);
 
     glutDisplayFunc(display);
     glutKeyboardFunc(keypressed);

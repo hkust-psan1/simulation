@@ -3,7 +3,7 @@
 
 #include "face.h"
 #include "material.h"
-#include "particle.h"
+#include "cloth.h"
 
 class Face;
 class Intersection;
