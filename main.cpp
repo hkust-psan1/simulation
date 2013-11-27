@@ -41,32 +41,34 @@ void keypressed(unsigned char key, int x, int y) {
 
 void simulate() {
     fallGel->clearState();
-    fallGel2->clearState();
+    // fallGel2->clearState();
     gel->clearState();
     
     for (Particle* p : gel->particles) {
         for (Particle* q : fallGel->particles) {
             Vec3 dis = p->pos - q->pos;
             if (dis.length() < 0.1) { // two particles close enough
-                p->addForce(dis * dis.length() * 20);
-                q->addForce(dis * dis.length() * -20);
+                p->addForce(dis * dis.length() * 30);
+                q->addForce(dis * dis.length() * -30);
             }
         }
     }
     
+    /*
     for (Particle* p : gel->particles) {
         for (Particle* q : fallGel2->particles) {
             Vec3 dis = p->pos - q->pos;
             if (dis.length() < 0.1) { // two particles close enough
-                p->addForce(dis * dis.length() * 20);
-                q->addForce(dis * dis.length() * -20);
+                p->addForce(dis * dis.length() * 30);
+                q->addForce(dis * dis.length() * -30);
             }
         }
     }
+    */
     
     gel->simulate();
     fallGel->simulate();
-    fallGel2->simulate();
+    // fallGel2->simulate();
 }
 
 void display() {
@@ -86,12 +88,6 @@ void display() {
     glLineWidth(1);
     glPointSize(3);
     
-    glColor3d(1, 1, 0);
-    glBegin(GL_POINTS);
-    glVertex3d(0, 2, 1);
-    glEnd();
-    
-    
     GLfloat diffuseMat3[] = { 0.8f, 0.3f, 0.6f, 1.0f };
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat3);
     gel->draw();
@@ -103,7 +99,7 @@ void display() {
     
     GLfloat diffuseMat2[] = { 0.5f, 0.8f, 0.5f, 1.0f };
     glMaterialfv(GL_FRONT, GL_DIFFUSE, diffuseMat2);
-    fallGel2->draw();
+    // fallGel2->draw();
 
     
     glutSwapBuffers();
@@ -115,15 +111,15 @@ int main(int argc, char * argv[]) {
     // Parser* parser = new Parser;
     // scene = parser->parseFile("/Users/guanlunzhao/Workspace/Models/cube.obj");
     
-    gel = new Gel(10, 1, Vec3(0, 0, 0));
+    gel = new Gel(10, 100, 1, Vec3(0, 0, 0));
     gel->still = true;
-    fallGel = new Gel(5, 0.5, Vec3(0.5, 2, 0.5));
-    fallGel2 = new Gel(5, 0.5, Vec3(-0.5, 1, 0));
+    fallGel = new Gel(5, 1000, 0.05, Vec3(0.3, 2, 0));
+    // fallGel2 = new Gel(5, 0.5, Vec3(-0.5, 1, 0));
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DEPTH | GLUT_DOUBLE);
     glutInitWindowSize(800, 600);
-    glutCreateWindow("Hello World");
+    glutCreateWindow("Simulation");
     
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);

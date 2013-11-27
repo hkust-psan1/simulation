@@ -33,7 +33,6 @@ Spring::Spring(Particle* p1, Particle* p2) {
     
     origLength = (p1->pos - p2->pos).length();
     
-    springCoeff = 20;
     broken = false;
 }
 
@@ -50,14 +49,14 @@ void Spring::update() {
     */
     
     if (!broken) {
-        p1->addForce(springCoeff * lengthDiff * (p2->pos - p1->pos));
-        p2->addForce(springCoeff * lengthDiff * (p1->pos - p2->pos));
+        p1->addForce(k * lengthDiff * (p2->pos - p1->pos));
+        p2->addForce(k * lengthDiff * (p1->pos - p2->pos));
     }
 }
 
 vector<Particle*> Gel::allParticles;
 
-Gel::Gel(int s, double l, const Vec3& c) : size(s), length(l), center(c), still(false) {
+Gel::Gel(int s, double sc, double l, const Vec3& c) : size(s), springCoeff(sc), length(l), center(c), still(false) {
     gridLength = l / size;
     
     displayParticles = new Particle***[size];
@@ -97,6 +96,7 @@ Gel::Gel(int s, double l, const Vec3& c) : size(s), length(l), center(c), still(
         for (Particle* q : particles) {
             if (p != q && (p->pos - q->pos).length() < 2.1 * gridLength) {
                 Spring* s = new Spring(p, q);
+                s->k = springCoeff;
                 springs.push_back(s);
             }
         }
@@ -117,7 +117,7 @@ void Gel::simulate() {
     }
     
     for (Particle* p : particles) {
-        p->updatePos(0.1);
+        p->updatePos(0.05);
     }
 }
 

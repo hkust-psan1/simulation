@@ -57,13 +57,13 @@ public:
     
     void update();
     
+    double k;
     bool broken;
 private:
     Particle* p1;
     Particle* p2;
     
     double origLength;
-    double springCoeff;
 };
 
 class IndexTri {
@@ -102,7 +102,7 @@ public:
 
 class Gel {
 public:
-    Gel(int s, double l = 1, const Vec3& c = Vec3(0, 0, 0));
+    Gel(int s, double sc = 10, double l = 1, const Vec3& c = Vec3(0, 0, 0));
     ~Gel();
 
     void simulate();
@@ -112,6 +112,7 @@ public:
     void draw();
     
     int size;
+    double springCoeff;
     double length;
     
     Vec3 center;
@@ -131,6 +132,8 @@ public:
     static vector<Particle*> allParticles;
     
     Particle**** displayParticles;
+    
+    
 private:
     vector<IndexTri> getNeighbors(int i, int j, int k);
     
